@@ -1,0 +1,177 @@
+---
+benchmark:
+  id: ad_best_practice
+  name: Active Directory Best Practice Security Baseline
+  version: "1.0.0"
+  date: "2024-06-01"
+  source: https://learn.microsoft.com/en-us/windows-server/identity/ad-ds/plan/security-best-practices
+  publisher: Community Standard (Microsoft + industry practice)
+
+metadata:
+  domain: identity
+  targets: [active-directory]
+  levels:
+    - level: 1
+      description: Minimum security baseline for all AD deployments
+    - level: 2
+      description: Enhanced security for high-value AD environments
+
+controls:
+  - id: AD-BP-1.1
+    title: Limit Domain Admin group membership
+    level: 1
+    category: Privileged Access Management
+    description: >
+      The Domain Admins group should be restricted to the absolute minimum
+      number of accounts (typically ≤ 3). No service accounts should be
+      permanent members of Domain Admins.
+    audit:
+      connector: collect_ad_users_groups.py
+      evaluation_type: deterministic
+      query: >
+        From collected AD group membership, count members of "Domain Admins"
+        group. Check if any are service accounts or lack MFA/privileged access
+        workstation (PAW) controls.
+    severity: critical
+    mapping:
+      nis2: NIS2-TECH-5.1
+      iso27001: A.9.2.3
+    remediation: >
+      1. Review Domain Admins membership — remove any non-essential accounts
+      2. Move service accounts to delegated groups with minimal permissions
+      3. Implement Privileged Access Workstations (PAWs) for admin accounts
+      4. Use Group Managed Service Accounts (gMSA) for services where possible
+
+  - id: AD-BP-1.2
+    title: Implement tiered administrative model
+    level: 2
+    category: Privileged Access Management
+    description: >
+      AD should implement a Tier 0 / Tier 1 / Tier 2 administrative model
+      using the Microsoft ESAE (Enhanced Security Admin Environment) or
+      similar methodology. Administrative accounts should be separate from
+      user accounts.
+    audit:
+      connector: collect_ad_users_groups.py
+      evaluation_type: ai
+      query: >
+        From collected AD structure (OUs, groups, user attributes), assess
+        whether a tiered administration model is implemented. Look for:
+        - Separate admin accounts vs user accounts
+        - OU structure reflecting tier boundaries
+        - GPOs restricting admin logon to specific workstations
+        - Delegation model using groups, not direct user assignment
+    severity: high
+    mapping:
+      nis2: NIS2-TECH-5.1
+    remediation: >
+      1. Design tiered model: Tier 0 (identity), Tier 1 (servers), Tier 2 (workstations)
+      2. Create separate admin accounts (admin_john.doe, not john.doe)
+      3. Restrict admin logon via GPO to specific PAWs
+      4. Implement delegation using groups with constrained permissions
+
+  - id: AD-BP-2.1
+    title: Enforce GPO security baseline
+    level: 1
+    category: Security Configuration
+    description: >
+      Default domain policy and domain controller policy should follow
+      security baseline: NTLMv2, SMB signing, LDAP signing, Kerberos
+      encryption, password policy.
+    audit:
+      connector: collect_ad_gpo.py
+      evaluation_type: ai
+      query: >
+        From collected GPO data, examine Default Domain Policy and Domain
+        Controller Policy. Check for:
+        - Password policy: length ≥ 14, complexity enabled, age ≤ 90 days
+        - Account lockout: threshold ≤ 5, duration ≥ 30 min
+        - NTLM: at least NTLMv2, ideally disabled
+        - SMB signing: required
+        - LDAP signing: required
+        - Kerberos: AES256 supported
+    severity: high
+    mapping:
+      cis: CIS-Win-1.1.1
+      iso27001: A.9.2.1
+    remediation: >
+      1. Update Default Domain Policy with secure password and lockout settings
+      2. Configure Domain Controller Policy to enforce NTLMv2, SMB signing,
+         LDAP signing
+      3. Disable NTLM where possible (use Kerberos)
+      4. Enable AES256 Kerberos encryption
+      5. Test before deploying to production
+
+  - id: AD-BP-2.2
+    title: Enable Active Directory Recycle Bin and Advanced Audit Policies
+    level: 1
+    category: Security Configuration
+    description: >
+      AD Recycle Bin should be enabled for object recovery. Advanced Audit
+      Policy should cover critical events (account management, directory
+      service access, logon/logoff).
+    audit:
+      connector: collect_ad_domains.py
+      evaluation_type: deterministic
+      query: >
+        From collected AD domain and forest functional levels:
+        - Check forest functional level ≥ 2008 R2 (required for Recycle Bin)
+        - Check if AD Recycle Bin is enabled (msDS-EnabledFeature)
+        - Check if advanced audit policy is configured via GPO or registry
+    severity: medium
+    remediation: >
+      1. Enable AD Recycle Bin from Active Directory Administrative Center
+      2. Configure Advanced Audit Policy for:
+         - Audit User Account Management (success + failure)
+         - Audit Security Group Management (success + failure)
+         - Audit Directory Service Access (success + failure)
+         - Audit Logon (success + failure)
+      3. Forward audit logs to SIEM
+
+  - id: AD-BP-3.1
+    title: Monitor and secure domain controller health
+    level: 1
+    category: Operational Security
+    description: >
+      Domain Controllers should be monitored for health, have no unnecessary
+      software installed, and follow secure configuration baselines.
+    audit:
+      connector: collect_ad_computers.py
+      evaluation_type: deterministic
+      query: >
+        From collected DC computer and configuration data:
+        - Check number of DCs (at least 2 per domain)
+        - Check OS version (should be latest supported)
+        - Check if DCs have additional roles/services beyond AD DS
+        - Check patching status
+    severity: high
+    remediation: >
+      1. Ensure at least 2 DCs per domain for redundancy
+      2. Keep DC OS up to date with latest patches
+      3. Remove any non-AD DS roles from DCs (file server, print server, etc.)
+      4. Implement monitoring: AD health checks, replication monitoring, DCDiag
+
+  - id: AD-BP-3.2
+    title: Secure AD Certificate Services (ADCS) if deployed
+    level: 2
+    category: Operational Security
+    description: >
+      If Active Directory Certificate Services is deployed, it must follow
+      PKI best practices: secure CA hierarchy, key protection, revocation
+      configuration, and audit logging.
+    audit:
+      connector: collect_ad_certificates.py
+      evaluation_type: ai
+      query: >
+        From collected ADCS data:
+        - CA hierarchy tier model (offline root CA recommended)
+        - HSM protection for CA keys
+        - CRL distribution points configured
+        - Certificate template security (manager approval required)
+        - CA audit logging enabled
+    severity: high
+    remediation: >
+      1. Implement offline root CA with HSM key protection
+      2. Configure CRL distribution points (CDP) and AIA
+      3. Secure certificate templates: restrict enroll permissions, require manager approval
+      4. Enable CA audit logging and monitor certificate requests

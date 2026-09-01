@@ -1,0 +1,143 @@
+---
+benchmark:
+  id: nis2_technical
+  name: NIS2 Directive — Technical Measures (Implementing Regulation)
+  version: "1.0.0"
+  date: "2024-01-15"
+  source: https://eur-lex.europa.eu/eli/reg_impl/2024/xxx
+  publisher: European Commission
+
+metadata:
+  domain: cross-cutting
+  targets: [azure, aws, gcp, kubernetes, windows-server, linux]
+  levels:
+    - level: 1
+      description: Baseline technical measures for essential entities
+
+controls:
+  - id: NIS2-TECH-2.1
+    title: Network segmentation and access control
+    level: 1
+    category: Network Security
+    description: >
+      Entities shall implement network segmentation and access control measures
+      to ensure that only authorized personnel and devices can access the
+      information systems. This includes micro-segmentation, firewall rules, and
+      VLAN separation.
+    audit:
+      connector: collect_azure_network.py
+      evaluation_type: ai
+      query: >
+        From collected network segmentation data (NSGs, VNets, subnets, firewall
+        config), assess whether network segmentation is implemented effectively.
+        Check: Are there separate subnets for different tiers? Are NSGs applied
+        at subnet or NIC level? Is there a hub-and-spoke topology with Azure
+        Firewall or NVA? Are jumpboxes used for administrative access?
+    severity: critical
+    mapping:
+      cis: CIS-3.1.1, CIS-3.1.2
+      iso27001: A.13.1.1, A.13.1.3
+    remediation: >
+      1. Implement hub-and-spoke network topology with Azure Firewall
+      2. Apply NSGs at subnet level with least-privilege rules
+      3. Use Azure Bastion for administrative access instead of public RDP/SSH
+      4. Implement Just-In-Time (JIT) VM access for administrative ports
+
+  - id: NIS2-TECH-3.1
+    title: Vulnerability management
+    level: 1
+    category: Security Operations
+    description: >
+      Entities shall implement technical measures to identify, assess, and
+      remediate vulnerabilities in their information systems on a continuous basis.
+    audit:
+      connector: collect_azure_governance.py
+      evaluation_type: ai
+      query: >
+        From collected vulnerability assessment data, assess: Is Microsoft
+        Defender for Cloud enabled? Are vulnerability assessments configured on
+        VMs and SQL servers? Is there a patch management process? Are
+        vulnerabilities being tracked and remediated within SLAs?
+    severity: high
+    mapping:
+      cis: CIS-2.1.1
+      iso27001: A.12.6.1
+    remediation: >
+      1. Enable Microsoft Defender for Cloud on all subscriptions
+      2. Enable vulnerability assessment on all VMs (Qualys or Microsoft)
+      3. Implement patch management with Azure Update Manager
+      4. Set SLA for critical vulnerability remediation (≤ 14 days)
+
+  - id: NIS2-TECH-4.1
+    title: Logging and monitoring
+    level: 1
+    category: Security Operations
+    description: >
+      Entities shall maintain comprehensive logs of system activities and
+      implement monitoring capabilities to detect anomalous or malicious behavior.
+    audit:
+      connector: collect_azure_governance.py
+      evaluation_type: ai
+      query: >
+        From collected logging configuration data: Are diagnostic settings
+        enabled on all resources? Are logs sent to a centralized SIEM (Sentinel,
+        Log Analytics)? Is Activity Log exported? Are NSG flow logs enabled?
+        Is there a retention policy meeting NIS2 requirements (≥ 12 months)?
+    severity: high
+    mapping:
+      cis: CIS-5.1.1
+      iso27001: A.12.4.1, A.12.4.3
+    remediation: >
+      1. Enable diagnostic settings on all Azure resources
+      2. Export Activity Log to Log Analytics workspace
+      3. Deploy Microsoft Sentinel or connect to existing SIEM
+      4. Configure retention of at least 12 months
+      5. Enable NSG flow logs for network monitoring
+
+  - id: NIS2-TECH-5.1
+    title: Strong authentication for privileged users
+    level: 1
+    category: Identity and Access
+    description: >
+      Multi-factor authentication shall be required for all users with
+      privileged access rights to information systems.
+    audit:
+      connector: collect_azure_aad.py
+      evaluation_type: ai
+      query: >
+        From collected identity data (Entra ID roles, Conditional Access policies,
+        PIM configuration): Is MFA enforced for all privileged users? Are there
+        Conditional Access policies requiring MFA for admin roles? Is PIM used
+        for just-in-time elevation?
+    severity: critical
+    mapping:
+      cis: CIS-1.1.1
+      iso27001: A.9.4.2
+    remediation: >
+      1. Enable Conditional Access policy requiring MFA for all admin roles
+      2. Implement PIM for just-in-time privileged access
+      3. Document break-glass accounts with strict controls
+      4. Configure MFA registration campaign for all users
+
+  - id: NIS2-TECH-5.2
+    title: Strong authentication for all users
+    level: 2
+    category: Identity and Access
+    description: >
+      Multi-factor authentication shall be required for all users accessing
+      the entity's information systems, regardless of privilege level.
+    audit:
+      connector: collect_azure_aad.py
+      evaluation_type: ai
+      query: >
+        From collected Conditional Access policies and user authentication
+        logs: Is MFA required for all user sign-ins? Are there exceptions
+        and if so, are they justified and time-limited?
+    severity: high
+    mapping:
+      cis: CIS-1.1.2
+      iso27001: A.9.4.2
+    remediation: >
+      1. Extend MFA requirements to all users via Conditional Access
+      2. Ensure no permanent MFA exemptions exist
+      3. Document and review any temporary exceptions

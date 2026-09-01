@@ -1,0 +1,253 @@
+---
+benchmark:
+  id: cis_azure_v2.0
+  name: CIS Microsoft Azure Foundations Benchmark
+  version: "2.0.0"
+  date: "2024-10-15"
+  source: https://www.cisecurity.org/benchmark/azure
+  publisher: Center for Internet Security
+
+metadata:
+  domain: cloud
+  targets: [azure]
+  levels:
+    - level: 1
+      description: Basic security (recommended for all environments)
+    - level: 2
+      description: Defense-in-depth (high-security environments)
+
+controls:
+  - id: CIS-1.1.1
+    title: Ensure that multi-factor authentication is enabled for all privileged users
+    level: 1
+    category: Identity and Access Management
+    description: >
+      Require MFA for all users who have administrative roles in Entra ID.
+      Privileged roles include: Global Administrator, Application Administrator,
+      Exchange Administrator, SharePoint Administrator, and others.
+    audit:
+      connector: collect_azure_aad.py
+      evaluation_type: ai
+      query: >
+        From the collected Entra ID directory roles and Conditional Access policy
+        data, check if MFA is enforced for every user with a privileged role
+        assignment. Look for Conditional Access policies that target admin roles
+        and require MFA. Also check for any exclusions that weaken enforcement.
+    severity: critical
+    mapping:
+      nis2: NIS2-TECH-5.1
+      iso27001: A.9.4.2
+    remediation: >
+      1. Navigate to Entra ID > Security > Conditional Access
+      2. Create a policy targeting "All users with admin roles"
+      3. Under Grant, select "Require multifactor authentication"
+      4. Exclude only break-glass accounts (max 2, document them)
+      5. Enable policy and test with a pilot group first
+      6. Verify: az rest --method get --uri "https://graph.microsoft.com/v1.0/identity/conditionalAccess/policies"
+
+  - id: CIS-1.1.2
+    title: Ensure that multi-factor authentication is enabled for all non-privileged users
+    level: 2
+    category: Identity and Access Management
+    description: >
+      Extend MFA requirements to all users, not just those with administrative roles.
+    audit:
+      connector: collect_azure_aad.py
+      evaluation_type: ai
+      query: >
+        From the collected Conditional Access policies, verify there is a policy
+        requiring MFA for all users during sign-in risk assessment, or a policy
+        that covers all users as a target. Identify any user groups excluded from MFA.
+    severity: high
+    mapping:
+      nis2: NIS2-TECH-5.2
+      iso27001: A.9.4.2
+    remediation: >
+      1. Extend MFA coverage to all users via a new or modified Conditional Access policy
+      2. Ensure no user groups are permanently excluded from MFA requirements
+      3. Document any exceptions with expiration dates
+
+  - id: CIS-1.1.3
+    title: Ensure that there are no guest users with administrative privileges
+    level: 1
+    category: Identity and Access Management
+    description: >
+      Guest users (external B2B collaborators) should not be assigned privileged
+      directory roles.
+    audit:
+      connector: collect_azure_aad.py
+      evaluation_type: ai
+      query: >
+        From the collected directory role assignments, check if any user with
+        userType == "Guest" has been assigned a privileged role. List any such assignments.
+    severity: high
+    mapping:
+      nis2: NIS2-TECH-5.3
+    remediation: >
+      1. Review directory role assignments for guest users
+      2. Remove any privileged role assignments from guest users
+      3. If guest needs elevated access, create a time-limited Privileged Identity
+         Management (PIM) activation request instead
+
+  - id: CIS-1.1.4
+    title: Ensure that privileged users are not standing (permanent) administrators
+    level: 1
+    category: Identity and Access Management
+    description: >
+      Use Privileged Identity Management (PIM) to require just-in-time elevation
+      instead of permanent role assignments for privileged roles.
+    audit:
+      connector: collect_azure_aad.py
+      evaluation_type: ai
+      query: >
+        From the collected PIM configuration data, check if privileged role
+        assignments are configured as "eligible" (requiring activation) rather
+        than "active" (permanent). Count permanently assigned privileged roles.
+    severity: high
+    mapping:
+      nis2: NIS2-TECH-5.4
+      iso27001: A.9.2.3
+    remediation: >
+      1. Navigate to Entra ID > Privileged Identity Management
+      2. Convert all permanent privileged role assignments to eligible assignments
+      3. Configure activation policies (time limits, approvers, MFA on activation)
+      4. Require justification for every elevation
+
+  - id: CIS-2.1.1
+    title: Ensure that Azure Policy is used to enforce resource compliance
+    level: 1
+    category: Security Governance
+    description: >
+      Use Azure Policy to enforce organizational standards and assess compliance
+      of Azure resources at scale.
+    audit:
+      connector: collect_azure_governance.py
+      evaluation_type: ai
+      query: >
+        From the collected Azure Policy data, check that policy assignments exist
+        at management group or subscription level. List the number of policies
+        assigned and identify any critical built-in policies that are missing
+        (e.g., "Allowed Locations", "Allowed SKUs", "Audit VMs without managed disks").
+    severity: medium
+    mapping:
+      nis2: NIS2-TECH-3.1
+      iso27001: A.12.6.1
+    remediation: >
+      1. Navigate to Azure Policy > Assignments
+      2. Assign at minimum the following built-in policies:
+         - Allowed locations (deny)
+         - Audit VMs without managed disks
+         - Audit VMs without disaster recovery configured
+         - Audit use of custom RBAC roles
+      3. Use initiative definitions (policy sets) for comprehensive coverage
+
+  - id: CIS-2.1.2
+    title: Ensure that Activity Log exists and is configured properly
+    level: 2
+    category: Security Governance
+    description: >
+      Azure Activity Log should be exported to Log Analytics workspace or
+      Azure Storage for long-term retention and analysis.
+    audit:
+      connector: collect_azure_governance.py
+      evaluation_type: deterministic
+      query: >
+        Check that diagnostic settings exist on the subscription level to export
+        Activity Log data. Verify that at least one destination is configured
+        (Log Analytics workspace or Storage account with retention ≥ 365 days).
+    severity: high
+    remediation: >
+      1. Navigate to Monitor > Activity Log > Export Activity Log
+      2. Configure diagnostic settings to stream to Log Analytics workspace
+      3. Set retention period to at least 365 days
+      4. Also configure export to Storage account for archival compliance
+
+  - id: CIS-3.1.1
+    title: Ensure no Network Security Groups allow unrestricted inbound RDP access (port 3389)
+    level: 1
+    category: Networking
+    description: >
+      Network Security Groups should not allow inbound RDP from any source.
+      Access to RDP should be restricted to authorized administrative IP ranges.
+    audit:
+      connector: collect_azure_network.py
+      evaluation_type: deterministic
+      query: >
+        For each NSG in each subscription, check if any rule allows inbound
+        access from Source = "Any" or "Internet" to port 3389 (RDP).
+        List all such NSG rules.
+    severity: critical
+    mapping:
+      nis2: NIS2-TECH-2.1
+      iso27001: A.13.1.1
+    remediation: >
+      1. Navigate to NSG rules for each affected NSG
+      2. Remove or modify the rule to restrict source IP to authorized admin ranges
+      3. If RDP access is needed, use Azure Bastion instead of public RDP
+      4. Verify: az network nsg rule list --nsg-name <name> --query "[?destinationPortRange=='3389']"
+
+  - id: CIS-3.1.2
+    title: Ensure no Network Security Groups allow unrestricted inbound SSH access (port 22)
+    level: 1
+    category: Networking
+    description: >
+      Network Security Groups should not allow inbound SSH from any source.
+    audit:
+      connector: collect_azure_network.py
+      evaluation_type: deterministic
+      query: >
+        For each NSG in each subscription, check if any rule allows inbound
+        access from Source = "Any" or "Internet" to port 22 (SSH).
+    severity: high
+    mapping:
+      nis2: NIS2-TECH-2.1
+      iso27001: A.13.1.1
+    remediation: >
+      1. Modify NSG rules to restrict SSH source IP to authorized admin ranges
+      2. Consider using Azure Bastion or VPN as alternative access methods
+
+  - id: CIS-4.1.1
+    title: Ensure storage account access is restricted to required protocols and encryption
+    level: 1
+    category: Storage
+    description: >
+      Storage accounts should require secure transfer (HTTPS) and restrict
+      access to TLS 1.2 or higher.
+    audit:
+      connector: collect_azure_storage.py
+      evaluation_type: deterministic
+      query: >
+        For each storage account, check:
+        - enableHttpsTrafficOnly == true
+        - minimumTlsVersion == "TLS1_2"
+    severity: high
+    mapping:
+      nis2: NIS2-TECH-2.2
+    remediation: >
+      1. For each non-compliant storage account, enable "Secure transfer required"
+      2. Set minimum TLS version to 1.2
+      3. az storage account update --name <name> --https-only true
+         --min-tls-version TLS1_2
+
+  - id: CIS-5.1.1
+    title: Ensure that Azure SQL Database auditing is enabled
+    level: 1
+    category: Databases
+    description: >
+      Enable auditing on Azure SQL Databases to track database events and
+      maintain a record of all changes.
+    audit:
+      connector: collect_azure_sql.py
+      evaluation_type: deterministic
+      query: >
+        For each Azure SQL Server and database, check that auditing is enabled
+        and configured to write to a storage account or Log Analytics workspace.
+    severity: high
+    mapping:
+      nis2: NIS2-TECH-4.1
+      iso27001: A.12.4.1
+    remediation: >
+      1. Navigate to SQL Server > Auditing
+      2. Enable auditing and configure destination (Storage/LA)
+      3. Use "AuditAll" events rather than "AuditSuccessful" only
+      4. Set retention to at least 365 days

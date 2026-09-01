@@ -1,0 +1,41 @@
+# Audit Scoping Configuration
+# Define which infrastructure targets to audit.
+
+targets:
+  # Example: Azure cloud audit
+  - domain: cloud
+    target: azure
+    sub_targets:
+      - "subscription:prod-eu-001"
+      - "subscription:prod-us-001"
+
+  # Example: Active Directory audit
+  - domain: identity
+    target: active-directory
+    sub_targets:
+      - "domain:corp.acme.com"
+
+  # Example: Kubernetes audit
+  - domain: container
+    target: kubernetes
+    sub_targets:
+      - "cluster:prod-k8s-01"
+
+  # Example: Windows Server audit (multiple hosts)
+  - domain: os
+    target: windows-server
+    sub_targets:
+      - "host:dc-01.corp.acme.com"
+      - "host:sql-01.corp.acme.com"
+      - "host:app-01.corp.acme.com"
+
+  # Example: VMware vCenter audit
+  - domain: virtualization
+    target: vmware-vcenter
+    sub_targets:
+      - "vcenter:vcenter.corp.acme.com"
+
+  # Full scope audit (all sub-targets in this domain)
+  - domain: database
+    target: oracle
+    sub_targets: []  # Empty = audit all discovered instances

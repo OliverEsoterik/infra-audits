@@ -1,0 +1,16 @@
+# Client Configuration Template
+# Copy this directory to clients/<client-name>/ and fill in the values.
+
+client:
+  name: "{{CLIENT_NAME}}"
+  industry: ""  # e.g., "Finance", "Healthcare", "Manufacturing"
+  engagement_id: "AUD-{{DATE}}-{{SEQ}}"
+  auditor: "{{AUDITOR_NAME}}"
+  date: "{{DATE}}"
+
+contact:
+  name: ""
+  email: ""
+  phone: ""
+
+notes: ""

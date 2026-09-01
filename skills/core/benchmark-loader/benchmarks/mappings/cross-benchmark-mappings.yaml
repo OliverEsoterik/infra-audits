@@ -1,0 +1,84 @@
+# Cross-Benchmark Control Mappings
+# Maps equivalent controls between different benchmarks for deduplication
+# and compliance correlation.
+
+mappings:
+  # Azure / Cloud controls
+  - cis: CIS-1.1.1
+    nis2: NIS2-TECH-5.1
+    iso27001: A.9.4.2
+    notes: MFA for privileged users — equivalent across all frameworks
+
+  - cis: CIS-1.1.2
+    nis2: NIS2-TECH-5.2
+    iso27001: A.9.4.2
+    notes: MFA for all users
+
+  - cis: CIS-2.1.1
+    nis2: NIS2-TECH-3.1
+    iso27001: A.12.6.1
+    notes: Vulnerability management — CIS focuses on Azure Policy, NIS2 is tech-agnostic
+
+  - cis: CIS-3.1.1
+    nis2: NIS2-TECH-2.1
+    iso27001: A.13.1.1
+    notes: Network access control (RDP/SSH restriction)
+
+  - cis: CIS-3.1.2
+    nis2: NIS2-TECH-2.1
+    iso27001: A.13.1.1
+    notes: Network access control (SSH restriction, same as RDP)
+
+  - cis: CIS-5.1.1
+    nis2: NIS2-TECH-4.1
+    iso27001: A.12.4.1
+    notes: Database auditing
+
+  # Active Directory controls
+  - ad: AD-BP-1.1
+    nis2: NIS2-TECH-5.1
+    iso27001: A.9.2.3
+    notes: Least privilege for Domain Admins
+
+  - ad: AD-BP-1.2
+    nis2: NIS2-TECH-5.1
+    notes: Tiered administration model
+
+  - ad: AD-BP-2.1
+    cis: CIS-Win-1.1.1
+    iso27001: A.9.2.1
+    notes: GPO security baseline
+
+  - ad: AD-BP-3.2
+    nis2: NIS2-TECH-4.2
+    notes: PKI / ADCS security
+
+  # Operating System controls
+  - cis: CIS-Win-19-1.1.1
+    nis2: NIS2-TECH-2.2
+    iso27001: A.10.1.1
+    notes: Encryption for Windows Server
+
+  - cis: CIS-Ubuntu-1.1.1
+    nis2: NIS2-TECH-2.2
+    iso27001: A.10.1.1
+    notes: Filesystem encryption for Linux
+
+  # K8s / Container controls
+  - cis: CIS-K8s-1.1.1
+    nis2: NIS2-TECH-2.3
+    notes: RBAC for Kubernetes
+
+  - cis: CIS-K8s-5.1.1
+    nis2: NIS2-TECH-4.1
+    notes: Kubernetes audit logging
+
+  # Network controls
+  - nis2: NIS2-TECH-2.1
+    iso27001: A.13.1.1, A.13.1.3
+    notes: Network segmentation — broadest covering control
+
+  # Backup controls
+  - nis2: NIS2-TECH-6.1
+    iso27001: A.12.3.1
+    notes: Backup and recovery procedures

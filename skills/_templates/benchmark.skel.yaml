@@ -1,0 +1,33 @@
+---
+benchmark:
+  id: "{{BENCHMARK_ID}}"
+  name: "{{BENCHMARK_NAME}}"
+  version: "{{VERSION}}"
+  date: "{{DATE}}"
+  source: "{{URL}}"
+  publisher: "{{PUBLISHER}}"
+
+metadata:
+  domain: "{{DOMAIN}}"
+  targets: ["{{TARGET_1}}"]
+  levels:
+    - level: 1
+      description: Basic security (recommended for all environments)
+    - level: 2
+      description: Defense-in-depth (high-security environments)
+
+controls:
+  - id: "{{CONTROL_ID}}"
+    title: "{{CONTROL_TITLE}}"
+    level: 1
+    category: "{{CATEGORY}}"
+    description: "{{CONTROL_DESCRIPTION}}"
+    audit:
+      connector: "{{CONNECTOR_SCRIPT}}"
+      evaluation_type: ai  # ai | deterministic | script
+      query: "{{AUDIT_QUERY}}"
+    severity: critical  # critical | high | medium | low | info
+    mapping:
+      nis2: ""
+      iso27001: ""
+    remediation: "{{REMEDIATION_STEPS}}"

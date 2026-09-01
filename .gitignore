@@ -1,0 +1,39 @@
+# Dependencies
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+
+# Virtual environments
+venv/
+.env/
+
+# Runtime workspace
+work/
+!work/graph/.gitkeep
+!work/evidence/.gitkeep
+!work/findings/.gitkeep
+!work/reports/.gitkeep
+
+# Client credentials & config (sensitive)
+clients/*/
+!clients/_template/
+!clients/_template/*
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# CI artifacts
+__snapshots__/.pi-loop.json
+.pi-loop.json.lock

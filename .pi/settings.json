@@ -1,0 +1,17 @@
+{
+  "agent": ".pi/dispatcher.md",
+  "project": "audits",
+  "skills": [
+    "skills/core/orchestrator/SKILL.md",
+    "skills/core/decomposer/SKILL.md",
+    "skills/core/benchmark-loader/SKILL.md",
+    "skills/core/finding-aggregator/SKILL.md",
+    "skills/core/report-compiler/SKILL.md"
+  ],
+  "agents": [
+    "agents/audit-planner.md",
+    "agents/evidence-collector.md",
+    "agents/compliance-evaluator.md",
+    "agents/report-writer.md"
+  ]
+}

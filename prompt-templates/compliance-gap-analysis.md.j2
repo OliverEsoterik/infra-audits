@@ -1,0 +1,47 @@
+You are a compliance analyst. Perform a gap analysis comparing the client's current security posture against the selected benchmarks.
+
+## Benchmarks Selected
+
+{% for b in benchmarks %}
+- {{ b }}
+{% endfor %}
+
+## Compliance Scores
+
+| Benchmark | Score |
+|-----------|-------|
+{% for bname, bscore in compliance_scores.items() %}
+| {{ bname }} | {{ bscore.score }}% |
+{% endfor %}
+
+## Critical & High Findings (Summary)
+
+{% for f in critical_findings %}
+- **{{ f.control_id }}** [{{ f.severity }}] {{ f.title }} — {{ f.evidence_summary[:100] }}
+{% endfor %}
+
+## Analysis Instructions
+
+1. Identify the biggest compliance gaps (where score is lowest)
+2. Identify overlapping controls that could be remediated together
+3. Recommend a remediation roadmap (quick wins first, then systemic fixes)
+4. Estimate overall effort to reach 90%+ compliance
+
+## Output Format
+
+Return as structured JSON:
+
+```json
+{
+  "gap_analysis": "Overall assessment of gaps...",
+  "biggest_gaps": ["Benchmark X at Y% — reason..."],
+  "overlapping_remediations": ["Control A and B both fixed by implementing X"],
+  "remediation_roadmap": {
+    "quick_wins": ["Can be fixed in < 1 day..."],
+    "short_term": ["1-2 weeks..."],
+    "medium_term": ["1-3 months..."],
+    "long_term": ["3-6 months..."]
+  },
+  "estimated_effort_to_90pct": "..."
+}
+```

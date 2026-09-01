@@ -1,0 +1,110 @@
+# Engagement Summary
+
+- **Client:** {{ client_name }}
+- **Engagement ID:** {{ engagement_id }}
+- **Audit Date:** {{ audit_date }}
+- **Auditor:** {{ auditor }}
+- **Benchmarks Selected:** {% for b in benchmarks %}{{ b }}{% if not loop.last %}, {% endif %}{% endfor %}
+
+---
+
+## Executive Summary
+
+{{ executive_summary }}
+
+---
+
+## Scope
+
+The following targets were audited:
+
+{% for target in targets %}
+- **{{ target.domain }} / {{ target.target }}**: {% if target.sub_targets %}{{ target.sub_targets | join(", ") }}{% else %}Full scope{% endif %}
+{% endfor %}
+
+## Methodology
+
+Data was collected via automated connector scripts executed against client
+infrastructure. Collected evidence was evaluated against the selected benchmarks
+using automated evaluation (AI-assisted) and deterministic checks.
+
+## Compliance Scores
+
+| Benchmark | Compliant | Non-Compliant | N/A | Score |
+|-----------|-----------|---------------|-----|-------|
+{% for b in compliance_scores %}
+| {{ b.name }} | {{ b.compliant }} | {{ b.non_compliant }} | {{ b.na }} | {{ b.score }}% |
+{% endfor %}
+
+---
+
+## Critical Findings
+
+{% for finding in findings if finding.severity == "critical" %}
+### {{ finding.control_id }} — {{ finding.title }}
+
+**Status:** ❌ Non-Compliant
+**Target:** {{ finding.domain }}/{{ finding.target }}
+**Benchmarks:** {% for b in finding.benchmarks %}{{ b }}{% if not loop.last %}, {% endif %}{% endfor %}
+
+**Current State:** {{ finding.evidence_summary }}
+
+**Expected State:** {{ finding.expected_state }}
+
+**Remediation:**
+{% for step in finding.remediation %}
+{{ loop.index }}. {{ step }}
+{% endfor %}
+
+---
+
+{% else %}
+*No critical findings.*
+{% endfor %}
+
+## High Findings
+
+{% for finding in findings if finding.severity == "high" %}
+### {{ finding.control_id }} — {{ finding.title }}
+
+**Status:** ❌ Non-Compliant
+**Target:** {{ finding.domain }}/{{ finding.target }}
+
+**Current State:** {{ finding.evidence_summary }}
+
+**Remediation:**
+{% for step in finding.remediation %}
+{{ loop.index }}. {{ step }}
+{% endfor %}
+
+---
+
+{% endfor %}
+
+## Remediation Plan (Priority Order)
+
+| Priority | Finding | Severity | Effort | Target |
+|----------|---------|----------|--------|--------|
+{% for item in remediation_plan %}
+| {{ loop.index }} | {{ item.control_id }} — {{ item.title }} | {{ item.severity }} | {{ item.effort }} | {{ item.target }} |
+{% endfor %}
+
+---
+
+## Appendices
+
+### Appendix A: Evidence Index
+
+| Evidence File | Connector | Target | Size | Status |
+|---------------|-----------|--------|------|--------|
+{% for ev in evidence_index %}
+| `{{ ev.path }}` | `{{ ev.connector }}` | {{ ev.target }} | {{ ev.size }} | {{ ev.status }} |
+{% endfor %}
+
+### Appendix B: Excluded Controls
+
+| Control ID | Benchmark | Reason for Exclusion |
+|------------|-----------|---------------------|
+{% for excluded in excluded_controls %}
+| {{ excluded.control_id }} | {{ excluded.benchmark }} | {{ excluded.reason }} |
+{% endfor %}

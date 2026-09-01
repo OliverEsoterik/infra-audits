@@ -1,0 +1,32 @@
+# Selected Benchmarks for Audit
+# Choose which benchmarks to evaluate against.
+
+selected:
+  # CIS Benchmarks
+  - cis_azure_v2.0
+  # - cis_aws_v1.5
+  # - cis_k8s_v1.24
+  # - cis_win2022_v1.0
+  # - cis_docker_v1.6
+
+  # NIS2 Directive
+  - nis2_technical
+  # - nis2_organizational
+
+  # BSI IT-Grundschutz
+  # - bsi_compendium
+  # - bsi_cloud
+
+  # ISO 27001:2022
+  # - iso27001_2022_annex_a
+
+  # Best Practice Baselines
+  - ad_best_practice
+  # - vcenter_best_practice
+  # - oracle_dba_best_practice
+
+levels:
+  # CIS Level 1 = basic security (recommended minimum)
+  # CIS Level 2 = defense-in-depth (high security)
+  - 1
+  # - 2

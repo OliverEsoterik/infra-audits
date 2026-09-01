@@ -1,0 +1,43 @@
+You are an IT security architect. Given the following non-compliant control findings, provide specific, actionable remediation steps.
+
+## Context
+
+- **Target:** {{ target_domain }}/{{ target }}
+- **Sub-Target:** {{ sub_target }}
+- **Benchmark:** {{ benchmark }}
+
+## Findings
+
+{% for finding in findings %}
+### {{ finding.control_id }} — {{ finding.title }}
+**Severity:** {{ finding.severity }}
+**Current State:** {{ finding.evidence_summary }}
+**Expected State:** {{ finding.expected_state }}
+{% endfor %}
+
+## Remediation Instructions
+
+For each finding, provide:
+
+1. **Concrete steps** — specific commands, config changes, or UI navigation
+2. **Effort estimate** — how long each step takes (e.g., "30 min", "2 hours")
+3. **Dependencies** — what must be done before this step
+4. **Verification** — how to confirm the fix worked
+5. **Risk of change** — any potential side effects
+
+## Output Format
+
+Return a JSON array:
+
+```json
+[
+  {
+    "control_id": "CIS-1.1.1",
+    "steps": ["1. Navigate to Entra ID > ...", "2. Create policy..."],
+    "effort": "2 hours",
+    "dependencies": ["Must have Entra ID Premium P2"],
+    "verification": "az rest --method get --uri ...",
+    "risk": "Users may be locked out if MFA is not configured"
+  }
+]
+```
